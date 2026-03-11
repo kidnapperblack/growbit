@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard — GROWBIT</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root{--em:#0A8754;--em-l:#10B981;--em-d:#065F46;--gold:#D4AF37;--gold-l:#F0D060;--gold-d:#A07820;--ch:#0F1320;--ch-m:#161C2D;--ch-l:#1E2538;--glass:rgba(255,255,255,.05);--gb:rgba(255,255,255,.09);--tx:#EEF2FF;--tm:#7B8DB0}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'DM Sans',sans-serif;background:var(--ch);color:var(--tx);min-height:100vh}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:var(--ch-m)}::-webkit-scrollbar-thumb{background:var(--gold-d);border-radius:3px}
+/* NAV */
+nav{position:sticky;top:0;z-index:50;background:rgba(15,19,32,.96);backdrop-filter:blur(20px);border-bottom:1px solid rgba(212,175,55,.15)}
+.nav-inner{max-width:1400px;margin:0 auto;padding:0 2rem;height:60px;display:flex;align-items:center;justify-content:space-between}
+.brand{font-family:'Cinzel',serif;font-weight:700;font-size:1.05rem;background:linear-gradient(135deg,var(--gold-l),var(--gold));-webkit-background-clip:text;background-clip:text;color:transparent}
+.nav-right{display:flex;align-items:center;gap:1rem}
+.nav-user{display:flex;align-items:center;gap:10px}
+.nav-avi{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:700;background:linear-gradient(135deg,var(--em-d),var(--em))}
+.nav-name{font-size:.85rem;font-weight:600;color:var(--tx)}
+.nav-cid{font-size:.72rem;color:var(--tm);font-family:monospace}
+.btn-logout{background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.25);color:#FCA5A5;padding:6px 14px;border-radius:8px;font-size:.78rem;font-weight:600;cursor:pointer;transition:all .2s}
+.btn-logout:hover{background:rgba(239,68,68,.2)}
+/* LAYOUT */
+.dash-wrap{max-width:1400px;margin:0 auto;padding:2rem}
+/* GREETING */
+.greeting{margin-bottom:2rem}
+.greeting-sub{font-size:.78rem;color:var(--tm);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:6px}
+.greeting-title{font-family:'Cinzel',serif;font-size:1.75rem;font-weight:700;background:linear-gradient(135deg,var(--gold-l),var(--gold));-webkit-background-clip:text;background-clip:text;color:transparent}
+.rank-badge-big{display:inline-flex;align-items:center;gap:8px;background:rgba(212,175,55,.1);border:1px solid rgba(212,175,55,.25);color:var(--gold-l);padding:6px 16px;border-radius:20px;font-size:.78rem;font-weight:700;letter-spacing:.8px;margin-top:8px}
+/* POINTS GRID */
+.pts-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1.25rem;margin-bottom:2rem}
+.pt-card{background:var(--glass);border:1px solid var(--gb);border-radius:16px;padding:22px 20px;transition:all .3s;position:relative;overflow:hidden}
+.pt-card::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(212,175,55,.05),transparent 60%);pointer-events:none}
+.pt-card:hover{transform:translateY(-4px);box-shadow:0 20px 40px rgba(0,0,0,.3)}
+.pt-icon{font-size:1.5rem;margin-bottom:12px}
+.pt-val{font-family:'Cinzel',serif;font-size:2rem;font-weight:700;line-height:1}
+.pt-lbl{font-size:.72rem;color:var(--tm);text-transform:uppercase;letter-spacing:1.2px;font-weight:600;margin-top:5px}
+.pt-direct{color:var(--em-l)}
+.pt-fo{color:var(--gold-l)}
+.pt-so{color:#A78BFA}
+.pt-total{background:linear-gradient(135deg,var(--gold-l),var(--gold));-webkit-background-clip:text;background-clip:text;color:transparent}
+/* TWO-COL */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:2rem}
+@media(max-width:900px){.two-col{grid-template-columns:1fr}}
+/* PANEL */
+.panel{background:var(--ch-m);border:1px solid rgba(212,175,55,.15);border-radius:18px;overflow:hidden}
+.panel-head{padding:18px 22px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center;justify-content:space-between}
+.panel-title{font-family:'Cinzel',serif;font-size:1rem;font-weight:700;color:var(--gold-l)}
+.panel-body{padding:18px 22px;max-height:420px;overflow-y:auto}
+.panel-body::-webkit-scrollbar{width:4px}
+/* member card */
+.mem-card{display:flex;align-items:center;gap:12px;padding:12px;border-radius:12px;border:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.03);transition:all .2s;margin-bottom:8px;cursor:pointer}
+.mem-card:hover{background:rgba(212,175,55,.06);border-color:rgba(212,175,55,.2)}
+.mem-avi{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;flex-shrink:0}
+.mem-info{flex:1}
+.mem-name{font-weight:600;font-size:.88rem}
+.mem-id{font-size:.72rem;color:var(--tm);font-family:monospace;margin-top:2px}
+.mem-pts{font-family:'Cinzel',serif;font-size:.9rem;font-weight:700;color:var(--gold-l)}
+.mem-badge{font-size:.68rem;padding:2px 8px;border-radius:10px;margin-top:3px;display:inline-block}
+.b-fo{background:rgba(16,185,129,.12);color:var(--em-l)}
+.b-so{background:rgba(167,139,250,.12);color:#A78BFA}
+.empty-state{text-align:center;padding:32px;color:var(--tm);font-size:.88rem;line-height:1.7}
+.empty-state .ei{font-size:2rem;margin-bottom:8px}
+/* CHART */
+.chart-panel{background:var(--ch-m);border:1px solid rgba(212,175,55,.15);border-radius:18px;padding:24px;margin-bottom:2rem}
+.chart-panel canvas{max-height:260px}
+/* PROFILE CARD */
+.profile-card{background:var(--ch-m);border:1px solid rgba(212,175,55,.2);border-radius:18px;padding:28px;margin-bottom:2rem;position:relative;overflow:hidden}
+.profile-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent)}
+.prof-top{display:flex;align-items:center;gap:18px;margin-bottom:20px}
+.prof-avi{width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.2rem;font-weight:700;background:linear-gradient(135deg,var(--em-d),var(--em));border:3px solid rgba(212,175,55,.3);flex-shrink:0}
+.prof-name{font-family:'Cinzel',serif;font-size:1.2rem;font-weight:700}
+.prof-email{font-size:.8rem;color:var(--tm);margin-top:3px}
+.prof-meta{display:flex;gap:1rem;flex-wrap:wrap}
+.prof-chip{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);border-radius:10px;padding:8px 14px}
+.prof-chip-lbl{font-size:.68rem;color:var(--tm);text-transform:uppercase;letter-spacing:1px}
+.prof-chip-val{font-size:.9rem;font-weight:700;color:var(--tx);margin-top:2px;font-family:monospace}
+/* SPIN */
+.spin{width:30px;height:30px;border:2px solid rgba(212,175,55,.2);border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 10px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-state{text-align:center;padding:40px;color:var(--tm)}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a href="index.html" class="brand">GROWBIT</a>
+    <div class="nav-right">
+      <div class="nav-user">
+        <div class="nav-avi" id="navAvi"></div>
+        <div>
+          <div class="nav-name" id="navName">Loading…</div>
+          <div class="nav-cid" id="navCid"></div>
+        </div>
+      </div>
+      <button class="btn-logout" onclick="doLogout()">Sign Out</button>
+    </div>
+  </div>
+</nav>
+
+<div class="dash-wrap" id="dashContent" style="display:none">
+  <!-- Greeting -->
+  <div class="greeting">
+    <div class="greeting-sub">Welcome back</div>
+    <div class="greeting-title" id="greetName">—</div>
+    <div class="rank-badge-big">🏆 Rank <span id="greetRank">—</span> in Network</div>
+  </div>
+
+  <!-- Profile -->
+  <div class="profile-card">
+    <div class="prof-top">
+      <div class="prof-avi" id="profAvi"></div>
+      <div>
+        <div class="prof-name" id="profName">—</div>
+        <div class="prof-email" id="profEmail">—</div>
+      </div>
+    </div>
+    <div class="prof-meta">
+      <div class="prof-chip"><div class="prof-chip-lbl">Customer ID</div><div class="prof-chip-val" id="profCid">—</div></div>
+      <div class="prof-chip"><div class="prof-chip-lbl">Member Since</div><div class="prof-chip-val" id="profJoined">—</div></div>
+      <div class="prof-chip"><div class="prof-chip-lbl">Status</div><div class="prof-chip-val" style="color:var(--em-l)" id="profStatus">Active</div></div>
+      <div class="prof-chip"><div class="prof-chip-lbl">Network Rank</div><div class="prof-chip-val" id="profRank">—</div></div>
+    </div>
+  </div>
+
+  <!-- Points -->
+  <div class="pts-grid">
+    <div class="pt-card">
+      <div class="pt-icon">⚡</div>
+      <div class="pt-val pt-direct" id="ptDirect">0</div>
+      <div class="pt-lbl">Direct Points</div>
+    </div>
+    <div class="pt-card">
+      <div class="pt-icon">🌱</div>
+      <div class="pt-val pt-fo" id="ptFO">0</div>
+      <div class="pt-lbl">First Orbit Points</div>
+    </div>
+    <div class="pt-card">
+      <div class="pt-icon">🌐</div>
+      <div class="pt-val pt-so" id="ptSO">0</div>
+      <div class="pt-lbl">Second Orbit Points</div>
+    </div>
+    <div class="pt-card" style="border-color:rgba(212,175,55,.25)">
+      <div class="pt-icon">🏆</div>
+      <div class="pt-val pt-total" id="ptTotal">0</div>
+      <div class="pt-lbl">Total Points</div>
+    </div>
+  </div>
+
+  <!-- Team Panels -->
+  <div class="two-col">
+    <div class="panel">
+      <div class="panel-head">
+        <span class="panel-title">🌱 First Orbit — Direct Recruits</span>
+        <span style="font-size:.78rem;color:var(--tm)" id="foCount">0 members</span>
+      </div>
+      <div class="panel-body" id="foPanel"><div class="loading-state"><div class="spin"></div>Loading…</div></div>
+    </div>
+    <div class="panel">
+      <div class="panel-head">
+        <span class="panel-title">🌐 Second Orbit</span>
+        <span style="font-size:.78rem;color:var(--tm)" id="soCount">0 members</span>
+      </div>
+      <div class="panel-body" id="soPanel"><div class="loading-state"><div class="spin"></div>Loading…</div></div>
+    </div>
+  </div>
+
+  <!-- Monthly Chart -->
+  <div class="chart-panel">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px">
+      <div>
+        <div style="font-family:'Cinzel',serif;color:var(--gold-l);font-size:1rem;font-weight:700">📈 Monthly History</div>
+        <div style="font-size:.78rem;color:var(--tm);margin-top:3px">Points earned & recruits per month</div>
+      </div>
+    </div>
+    <canvas id="histChart"></canvas>
+  </div>
+
+  <!-- Recent Points History -->
+  <div class="panel" style="margin-bottom:2rem">
+    <div class="panel-head">
+      <span class="panel-title">📋 Recent Points Activity</span>
+    </div>
+    <div class="panel-body" id="histPanel">
+      <div class="loading-state"><div class="spin"></div>Loading…</div>
+    </div>
+  </div>
+</div>
+
+<!-- Loading state -->
+<div id="dashLoading" style="text-align:center;padding:80px;color:var(--tm)">
+  <div class="spin" style="width:40px;height:40px;border-width:3px;margin:0 auto 16px"></div>
+  <div>Loading your dashboard…</div>
+</div>
+
+<script src="firebase-config.js"></script>
+<script>
+const AVI_COLORS=['linear-gradient(135deg,#0A8754,#10B981)','linear-gradient(135deg,#1e40af,#3b82f6)','linear-gradient(135deg,#6d28d9,#8b5cf6)','linear-gradient(135deg,#9d174d,#ec4899)','linear-gradient(135deg,#92400e,#f59e0b)','linear-gradient(135deg,#065F46,#34d399)'];
+function aviColor(s){let h=0;for(let c of s)h=((h<<5)-h)+c.charCodeAt(0);return AVI_COLORS[Math.abs(h)%AVI_COLORS.length]}
+function initials(n){return(n||'?').trim().split(/\s+/).map(w=>w[0]||'').slice(0,2).join('').toUpperCase()}
+function fmt(n){return(n||0).toLocaleString()}
+
+let chartInstance=null;
+let userData=null, allUsersData=[];
+
+auth.onAuthStateChanged(async user=>{
+  if(!user){ window.location.href='login.html'; return; }
+  
+  // Load user data real-time
+  db.collection('users').doc(user.uid).onSnapshot(async snap=>{
+    if(!snap.exists){ doLogout(); return; }
+    userData={id:snap.id,...snap.data()};
+    const cid=userData.customerId||snap.id;
+    const name=userData.displayName||user.email;
+    const ini=initials(name);
+
+    // Nav
+    document.getElementById('navAvi').textContent=ini;
+    document.getElementById('navAvi').style.background=aviColor(name);
+    document.getElementById('navName').textContent=name;
+    document.getElementById('navCid').textContent=cid;
+
+    // Profile
+    document.getElementById('greetName').textContent='Hello, '+name.split(' ')[0]+'!';
+    document.getElementById('profAvi').textContent=ini;
+    document.getElementById('profAvi').style.background=aviColor(name);
+    document.getElementById('profName').textContent=name;
+    document.getElementById('profEmail').textContent=user.email;
+    document.getElementById('profCid').textContent=cid;
+    document.getElementById('profJoined').textContent=userData.createdAt?.toDate?userData.createdAt.toDate().toLocaleDateString('en-IN',{month:'short',year:'numeric'}):'—';
+    document.getElementById('profStatus').textContent=userData.status||'Active';
+
+    // Points
+    const dp=userData.directPoints||0, fo=userData.firstOrbitPoints||0, so=userData.secondOrbitPoints||0, tp=userData.totalPoints||0;
+    animCount('ptDirect',dp); animCount('ptFO',fo); animCount('ptSO',so); animCount('ptTotal',tp);
+
+    // Rank calculation
+    const rankSnap=await db.collection('users').where('totalPoints','>',tp).get();
+    const rank=rankSnap.size+1;
+    document.getElementById('greetRank').textContent='#'+rank;
+    document.getElementById('profRank').textContent='#'+rank;
+
+    // Load team
+    loadTeam(cid);
+    loadHistory(user.uid);
+
+    document.getElementById('dashLoading').style.display='none';
+    document.getElementById('dashContent').style.display='block';
+  });
+});
+
+function animCount(id, target){
+  const el=document.getElementById(id);
+  let cur=0, step=Math.max(1,Math.ceil(target/50));
+  const t=setInterval(()=>{ cur=Math.min(cur+step,target); el.textContent=cur.toLocaleString(); if(cur>=target)clearInterval(t); },20);
+}
+
+async function loadTeam(cid){
+  // First Orbit
+  const fo=await db.collection('users').where('recruitedBy','==',cid).orderBy('totalPoints','desc').get();
+  const foPanel=document.getElementById('foPanel');
+  document.getElementById('foCount').textContent=fo.size+' member'+(fo.size!==1?'s':'');
+  if(fo.empty){ foPanel.innerHTML=`<div class="empty-state"><div class="ei">🌱</div>No direct recruits yet.</div>`; }
+  else { foPanel.innerHTML=fo.docs.map(d=>memberCard(d,'fo')).join(''); }
+
+  // Second Orbit
+  const foIds=fo.docs.map(d=>d.data().customerId||d.id);
+  let soMembers=[];
+  for(const fid of foIds){
+    const so2=await db.collection('users').where('recruitedBy','==',fid).get();
+    so2.docs.forEach(d=>soMembers.push({...d.data(),id:d.id,viaId:fid}));
+  }
+  soMembers.sort((a,b)=>(b.totalPoints||0)-(a.totalPoints||0));
+  const soPanel=document.getElementById('soPanel');
+  document.getElementById('soCount').textContent=soMembers.length+' member'+(soMembers.length!==1?'s':'');
+  if(!soMembers.length){ soPanel.innerHTML=`<div class="empty-state"><div class="ei">🌐</div>No second orbit yet.</div>`; }
+  else { soPanel.innerHTML=soMembers.map(u=>memberCard2(u)).join(''); }
+}
+
+function memberCard(doc, type){
+  const u=doc.data(), name=u.displayName||'Unknown', cid=u.customerId||doc.id, pts=u.totalPoints||0;
+  return `<div class="mem-card">
+    <div class="mem-avi" style="background:${aviColor(name)}">${initials(name)}</div>
+    <div class="mem-info">
+      <div class="mem-name">${name}</div>
+      <div class="mem-id">${cid}</div>
+      <span class="mem-badge b-fo">Direct Recruit +2 pts</span>
+    </div>
+    <div class="mem-pts">${fmt(pts)}</div>
+  </div>`;
+}
+function memberCard2(u){
+  const name=u.displayName||'Unknown', cid=u.customerId||u.id, pts=u.totalPoints||0;
+  return `<div class="mem-card">
+    <div class="mem-avi" style="background:${aviColor(name)}">${initials(name)}</div>
+    <div class="mem-info">
+      <div class="mem-name">${name}</div>
+      <div class="mem-id">${cid}</div>
+      <span class="mem-badge b-so">2nd Orbit +1 pt</span>
+    </div>
+    <div class="mem-pts">${fmt(pts)}</div>
+  </div>`;
+}
+
+async function loadHistory(uid){
+  const snap=await db.collection('monthly_history').where('userId','==',uid).orderBy('month','asc').limit(12).get();
+  const months=[],pts=[],recruits=[];
+  snap.docs.forEach(d=>{
+    const h=d.data();
+    months.push(h.month||'');
+    pts.push(h.pointsEarned||0);
+    recruits.push(h.recruits||0);
+  });
+  // Chart
+  if(chartInstance)chartInstance.destroy();
+  const ctx=document.getElementById('histChart').getContext('2d');
+  chartInstance=new Chart(ctx,{
+    type:'bar',
+    data:{
+      labels:months.length?months:['No data'],
+      datasets:[
+        {label:'Points Earned',data:pts.length?pts:[0],backgroundColor:'rgba(212,175,55,.6)',borderColor:'rgba(212,175,55,1)',borderWidth:2,borderRadius:6},
+        {label:'Recruits',data:recruits.length?recruits:[0],backgroundColor:'rgba(16,185,129,.4)',borderColor:'rgba(16,185,129,.9)',borderWidth:2,borderRadius:6,type:'line',fill:false,tension:.4,pointBackgroundColor:'rgba(16,185,129,.9)'},
+      ]
+    },
+    options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{labels:{color:'#7B8DB0',font:{family:'DM Sans'}}}},scales:{x:{ticks:{color:'#7B8DB0'},grid:{color:'rgba(255,255,255,.05)'}},y:{ticks:{color:'#7B8DB0'},grid:{color:'rgba(255,255,255,.05)'}}}}
+  });
+
+  // Points History list
+  const histSnap=await db.collection('points_history').where('userId','==',uid).orderBy('createdAt','desc').limit(20).get();
+  const histPanel=document.getElementById('histPanel');
+  if(histSnap.empty){ histPanel.innerHTML=`<div class="empty-state"><div class="ei">📋</div>No activity yet.</div>`; return; }
+  histPanel.innerHTML=histSnap.docs.map(d=>{
+    const h=d.data();
+    const date=h.createdAt?.toDate?h.createdAt.toDate().toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}):'—';
+    const clr=h.points>0?'var(--em-l)':'#FCA5A5';
+    return `<div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid rgba(255,255,255,.05)">
+      <div><div style="font-size:.88rem;font-weight:600">${h.description||'Points update'}</div><div style="font-size:.74rem;color:var(--tm);margin-top:2px">${date}</div></div>
+      <div style="font-family:'Cinzel',serif;font-size:1rem;font-weight:700;color:${clr}">${h.points>0?'+':''}${h.points}</div>
+    </div>`;
+  }).join('');
+}
+
+function doLogout(){ auth.signOut().then(()=>window.location.href='login.html'); }
+</script>
+</body>
+</html>

@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — GROWBIT</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root{--em:#0A8754;--em-l:#10B981;--gold:#D4AF37;--gold-l:#F0D060;--gold-d:#A07820;--ch:#0F1320;--ch-m:#161C2D;--ch-l:#1E2538;--glass:rgba(255,255,255,.05);--tx:#EEF2FF;--tm:#7B8DB0;--red:#EF4444;--red-l:#FCA5A5}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--ch);color:var(--tx);min-height:100vh;display:flex}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:var(--ch-m)}::-webkit-scrollbar-thumb{background:var(--gold-d);border-radius:3px}
+
+/* SIDEBAR */
+.sidebar{width:240px;min-height:100vh;background:var(--ch-m);border-right:1px solid rgba(212,175,55,.12);display:flex;flex-direction:column;flex-shrink:0;position:fixed;top:0;left:0;height:100vh;overflow-y:auto;z-index:50}
+.sb-brand{padding:20px 20px 16px;border-bottom:1px solid rgba(212,175,55,.12)}
+.sb-brand-name{font-family:'Cinzel',serif;font-size:.95rem;font-weight:700;background:linear-gradient(135deg,var(--gold-l),var(--gold));-webkit-background-clip:text;background-clip:text;color:transparent}
+.sb-brand-tag{font-size:.7rem;color:var(--red-l);background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.25);padding:2px 8px;border-radius:8px;margin-top:4px;display:inline-block;font-weight:600;letter-spacing:.8px}
+.sb-nav{flex:1;padding:12px 0}
+.sb-item{display:flex;align-items:center;gap:10px;padding:11px 20px;color:var(--tm);font-size:.83rem;font-weight:500;cursor:pointer;transition:all .2s;border-left:2px solid transparent}
+.sb-item:hover{color:var(--tx);background:rgba(255,255,255,.04)}
+.sb-item.active{color:var(--gold-l);background:rgba(212,175,55,.07);border-left-color:var(--gold)}
+.sb-icon{font-size:1rem;width:20px;text-align:center}
+.sb-footer{padding:16px 20px;border-top:1px solid rgba(212,175,55,.1)}
+.btn-logout-sb{width:100%;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);color:var(--red-l);padding:8px;border-radius:8px;font-size:.8rem;font-weight:600;cursor:pointer;transition:all .2s}
+.btn-logout-sb:hover{background:rgba(239,68,68,.2)}
+
+/* MAIN */
+.main{margin-left:240px;flex:1;min-height:100vh;display:flex;flex-direction:column}
+.topbar{background:rgba(15,19,32,.95);border-bottom:1px solid rgba(212,175,55,.1);padding:0 2rem;height:58px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:40}
+.page-title{font-family:'Cinzel',serif;font-size:1.05rem;font-weight:700;color:var(--gold-l)}
+.content{padding:2rem;flex:1}
+
+/* CARDS */
+.stat-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;margin-bottom:2rem}
+.s-card{background:var(--glass);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:20px 18px}
+.s-val{font-family:'Cinzel',serif;font-size:1.8rem;font-weight:700;color:var(--gold-l)}
+.s-lbl{font-size:.72rem;color:var(--tm);text-transform:uppercase;letter-spacing:1px;margin-top:4px}
+
+/* TABLE */
+.tbl-wrap{background:var(--ch-m);border:1px solid rgba(212,175,55,.12);border-radius:16px;overflow:hidden}
+.tbl-head{padding:16px 20px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.tbl-head-title{font-family:'Cinzel',serif;font-size:.95rem;font-weight:700;color:var(--gold-l)}
+.search-inp{background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.1);color:var(--tx);padding:8px 14px;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:.82rem;width:100%;max-width:280px;transition:border-color .2s}
+.search-inp:focus{outline:none;border-color:rgba(212,175,55,.4)}
+.search-inp::placeholder{color:var(--tm)}
+.tbl-scroll{overflow-x:auto}
+table{width:100%;min-width:900px;border-collapse:collapse}
+thead tr{background:rgba(0,0,0,.35);border-bottom:1px solid rgba(212,175,55,.1)}
+thead th{padding:12px 16px;font-size:.7rem;font-weight:700;letter-spacing:1.3px;text-transform:uppercase;color:var(--tm);text-align:left;white-space:nowrap}
+tbody tr{border-bottom:1px solid rgba(255,255,255,.04);transition:background .15s}
+tbody tr:hover{background:rgba(212,175,55,.03)}
+td{padding:12px 16px;font-size:.83rem;vertical-align:middle}
+.cid-chip{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:var(--tm);padding:3px 9px;border-radius:6px;font-size:.72rem;font-family:monospace}
+.role-chip{padding:3px 9px;border-radius:8px;font-size:.7rem;font-weight:600}
+.role-admin{background:rgba(239,68,68,.12);color:var(--red-l);border:1px solid rgba(239,68,68,.2)}
+.role-user{background:rgba(16,185,129,.1);color:var(--em-l);border:1px solid rgba(16,185,129,.2)}
+.btn-sm{padding:5px 12px;border-radius:7px;font-size:.73rem;font-weight:600;cursor:pointer;transition:all .2s;border:1px solid}
+.btn-edit{background:rgba(59,130,246,.1);border-color:rgba(59,130,246,.3);color:#93C5FD}
+.btn-edit:hover{background:rgba(59,130,246,.2)}
+.btn-del{background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.25);color:var(--red-l)}
+.btn-del:hover{background:rgba(239,68,68,.18)}
+.btn-pts{background:rgba(212,175,55,.1);border-color:rgba(212,175,55,.3);color:var(--gold-l)}
+.btn-pts:hover{background:rgba(212,175,55,.2)}
+
+/* TABS */
+.tabs-row{display:flex;gap:.5rem;margin-bottom:2rem;flex-wrap:wrap}
+.tab-btn{padding:8px 18px;border-radius:8px;font-size:.8rem;font-weight:600;cursor:pointer;transition:all .2s;border:1px solid rgba(255,255,255,.1);background:transparent;color:var(--tm)}
+.tab-btn.active{background:rgba(212,175,55,.12);border-color:rgba(212,175,55,.3);color:var(--gold-l)}
+.tab-panel{display:none}.tab-panel.active{display:block}
+
+/* RESET ZONE */
+.reset-zone{background:rgba(239,68,68,.06);border:2px solid rgba(239,68,68,.25);border-radius:18px;padding:32px}
+.reset-title{font-family:'Cinzel',serif;font-size:1.1rem;font-weight:700;color:var(--red-l);margin-bottom:8px}
+.reset-desc{font-size:.85rem;color:var(--tm);line-height:1.7;margin-bottom:20px}
+.reset-items{display:flex;flex-direction:column;gap:8px;margin-bottom:24px}
+.reset-item{display:flex;align-items:center;gap:8px;font-size:.83rem;color:#FCA5A5}
+.reset-item::before{content:'⚠️';flex-shrink:0}
+.btn-reset-big{background:linear-gradient(135deg,#b91c1c,var(--red));color:#fff;padding:14px 32px;border-radius:10px;font-weight:700;font-size:.95rem;border:none;cursor:pointer;transition:all .25s;letter-spacing:.4px;box-shadow:0 6px 20px rgba(239,68,68,.3)}
+.btn-reset-big:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(239,68,68,.45)}
+.btn-reset-big:disabled{opacity:.5;cursor:not-allowed;transform:none}
+
+/* MODAL */
+.modal-bg{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.8);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:1rem;opacity:0;pointer-events:none;transition:opacity .25s}
+.modal-bg.open{opacity:1;pointer-events:all}
+.modal-box{background:var(--ch-m);border:1px solid rgba(255,255,255,.12);border-radius:18px;padding:32px;width:100%;max-width:440px;transform:scale(.95);transition:transform .25s}
+.modal-bg.open .modal-box{transform:scale(1)}
+.modal-title{font-family:'Cinzel',serif;font-size:1.05rem;font-weight:700;margin-bottom:16px}
+.form-group{margin-bottom:14px}
+.form-lbl{display:block;font-size:.75rem;font-weight:600;letter-spacing:.8px;text-transform:uppercase;color:var(--tm);margin-bottom:6px}
+.form-inp{width:100%;background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.1);color:var(--tx);padding:10px 14px;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:.875rem;transition:border-color .2s}
+.form-inp:focus{outline:none;border-color:rgba(212,175,55,.4)}
+.modal-btns{display:flex;gap:10px;justify-content:flex-end;margin-top:20px}
+.btn-cancel{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);color:var(--tm);padding:9px 20px;border-radius:8px;font-size:.83rem;font-weight:600;cursor:pointer;transition:all .2s}
+.btn-cancel:hover{color:var(--tx)}
+.btn-confirm{background:linear-gradient(135deg,var(--em),var(--em-l));color:#fff;border:none;padding:9px 20px;border-radius:8px;font-size:.83rem;font-weight:700;cursor:pointer;transition:all .2s}
+.btn-confirm:hover{opacity:.88}
+.btn-confirm-red{background:linear-gradient(135deg,#b91c1c,var(--red))}
+
+/* SPIN */
+.spin{width:28px;height:28px;border:2px solid rgba(212,175,55,.2);border-top-color:var(--gold);border-radius:50%;animation:spin .7s linear infinite;margin:40px auto;display:block}
+@keyframes spin{to{transform:rotate(360deg)}}
+.alert{padding:10px 14px;border-radius:8px;font-size:.82rem;display:none;margin-bottom:14px}
+.alert.show{display:block}
+.alert.err{background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);color:var(--red-l)}
+.alert.ok{background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.25);color:#6EE7B7}
+
+/* Products form */
+.prod-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1rem}
+.prod-admin-card{background:var(--ch-l);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:18px;transition:border-color .2s}
+.prod-admin-card:hover{border-color:rgba(212,175,55,.2)}
+.prod-admin-card .pname{font-weight:700;margin-bottom:4px}
+.prod-admin-card .pprice{color:var(--gold-l);font-family:'Cinzel',serif}
+.prod-admin-card .pactions{display:flex;gap:6px;margin-top:12px}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sb-brand">
+    <div class="sb-brand-name">GROWBIT</div>
+    <div class="sb-brand-tag">ADMIN</div>
+  </div>
+  <nav class="sb-nav">
+    <div class="sb-item active" onclick="showTab('overview')"><span class="sb-icon">📊</span>Overview</div>
+    <div class="sb-item" onclick="showTab('users')"><span class="sb-icon">👥</span>Users</div>
+    <div class="sb-item" onclick="showTab('points')"><span class="sb-icon">⚡</span>Points</div>
+    <div class="sb-item" onclick="showTab('leaderboard')"><span class="sb-icon">🏆</span>Leaderboard</div>
+    <div class="sb-item" onclick="showTab('products')"><span class="sb-icon">📦</span>Products</div>
+    <div class="sb-item" onclick="showTab('rewards')"><span class="sb-icon">🎁</span>Rewards</div>
+    <div class="sb-item" onclick="showTab('reset')"><span class="sb-icon">🔄</span>Master Reset</div>
+  </nav>
+  <div class="sb-footer">
+    <button class="btn-logout-sb" onclick="doLogout()">Sign Out</button>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+  <div class="topbar">
+    <div class="page-title" id="topTitle">Overview</div>
+    <div style="font-size:.8rem;color:var(--tm)">Admin Control Panel</div>
+  </div>
+  <div class="content">
+
+    <!-- OVERVIEW -->
+    <div id="tabOverview" class="tab-panel active">
+      <div class="stat-row" id="overviewStats">
+        <div class="s-card"><div class="s-val" id="ovTotal">—</div><div class="s-lbl">Total Users</div></div>
+        <div class="s-card"><div class="s-val" id="ovPts">—</div><div class="s-lbl">Network Points</div></div>
+        <div class="s-card"><div class="s-val" id="ovPool">—</div><div class="s-lbl">Global Pool</div></div>
+        <div class="s-card"><div class="s-val" id="ovPartners">—</div><div class="s-lbl">New Partners</div></div>
+      </div>
+      <div class="tbl-wrap">
+        <div class="tbl-head"><div class="tbl-head-title">Recent Registrations</div></div>
+        <div class="tbl-scroll"><table><thead><tr><th>Name</th><th>Customer ID</th><th>Email</th><th>Points</th><th>Joined</th></tr></thead>
+        <tbody id="ovRecent"><tr><td colspan="5"><div class="spin"></div></td></tr></tbody></table></div>
+      </div>
+    </div>
+
+    <!-- USERS -->
+    <div id="tabUsers" class="tab-panel">
+      <div class="tbl-wrap">
+        <div class="tbl-head">
+          <div class="tbl-head-title">All Users</div>
+          <input class="search-inp" id="userSearch" placeholder="Search name, ID or email…" oninput="filterUsers()">
+          <button class="btn-sm btn-edit" style="white-space:nowrap" onclick="openAddUser()">+ Add User</button>
+        </div>
+        <div class="tbl-scroll"><table><thead><tr><th>Name</th><th>Customer ID</th><th>Email</th><th>Role</th><th>Total Points</th><th>Actions</th></tr></thead>
+        <tbody id="usersTbody"><tr><td colspan="6"><div class="spin"></div></td></tr></tbody></table></div>
+      </div>
+    </div>
+
+    <!-- POINTS -->
+    <div id="tabPoints" class="tab-panel">
+      <div class="tbl-wrap" style="margin-bottom:1.5rem">
+        <div class="tbl-head"><div class="tbl-head-title">Adjust User Points</div></div>
+        <div style="padding:24px">
+          <div class="alert err" id="ptsErr"></div>
+          <div class="alert ok" id="ptsOk"></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:12px;align-items:end">
+            <div><label class="form-lbl">Customer ID</label><input class="form-inp" id="ptsUserId" placeholder="GG20100"></div>
+            <div><label class="form-lbl">Points (+/-)</label><input class="form-inp" type="number" id="ptsAmount" placeholder="e.g. 50 or -10"></div>
+            <div><label class="form-lbl">Reason</label><input class="form-inp" id="ptsReason" placeholder="Admin adjustment"></div>
+            <button class="btn-confirm" style="padding:10px 22px;border-radius:8px;font-size:.83rem;font-weight:700;cursor:pointer;border:none" onclick="adjustPoints()">Apply</button>
+          </div>
+        </div>
+      </div>
+      <div class="tbl-wrap">
+        <div class="tbl-head"><div class="tbl-head-title">Recent Points History</div></div>
+        <div class="tbl-scroll"><table><thead><tr><th>User</th><th>Points</th><th>Description</th><th>Date</th></tr></thead>
+        <tbody id="ptsHistory"><tr><td colspan="4"><div class="spin"></div></td></tr></tbody></table></div>
+      </div>
+    </div>
+
+    <!-- LEADERBOARD MANAGEMENT -->
+    <div id="tabLeaderboard" class="tab-panel">
+      <div class="tbl-wrap">
+        <div class="tbl-head"><div class="tbl-head-title">Leaderboard (Admin View)</div><div style="font-size:.78rem;color:var(--tm)">Auto-ranked by total points</div></div>
+        <div class="tbl-scroll"><table><thead><tr><th>Rank</th><th>Name</th><th>ID</th><th>Direct</th><th>1st Orbit</th><th>2nd Orbit</th><th>Total</th><th>Action</th></tr></thead>
+        <tbody id="lbAdminBody"><tr><td colspan="8"><div class="spin"></div></td></tr></tbody></table></div>
+      </div>
+    </div>
+
+    <!-- PRODUCTS -->
+    <div id="tabProducts" class="tab-panel">
+      <div style="display:flex;justify-content:flex-end;margin-bottom:1rem">
+        <button class="btn-confirm" style="padding:9px 20px;border:none;cursor:pointer;border-radius:8px;font-weight:700" onclick="openAddProduct()">+ Add Product</button>
+      </div>
+      <div class="prod-grid" id="prodAdminGrid"><div class="spin"></div></div>
+    </div>
+
+    <!-- REWARDS -->
+    <div id="tabRewards" class="tab-panel">
+      <div style="display:flex;justify-content:flex-end;margin-bottom:1rem">
+        <button class="btn-confirm" style="padding:9px 20px;border:none;cursor:pointer;border-radius:8px;font-weight:700" onclick="openAddReward()">+ Add Reward</button>
+      </div>
+      <div class="prod-grid" id="rewardAdminGrid"><div class="spin"></div></div>
+    </div>
+
+    <!-- MASTER RESET -->
+    <div id="tabReset" class="tab-panel">
+      <div class="reset-zone">
+        <div class="reset-title">🔴 Master Reset</div>
+        <div class="reset-desc">This action resets all global counters and user points. It is intended to run <strong>once every month</strong>. User accounts and profiles are preserved. This action cannot be undone.</div>
+        <div class="reset-items">
+          <div class="reset-item">Global Pool → 0</div>
+          <div class="reset-item">Total Network Points → 0</div>
+          <div class="reset-item">Team Support Points → 0</div>
+          <div class="reset-item">New Partners → 0</div>
+          <div class="reset-item">All user directPoints, firstOrbitPoints, secondOrbitPoints, totalPoints → 0</div>
+        </div>
+        <div style="font-size:.8rem;color:var(--tm);margin-bottom:16px">Last reset: <strong id="lastReset" style="color:var(--gold-l)">Never</strong></div>
+        <button class="btn-reset-big" onclick="openResetModal()">⚠️ Initiate Master Reset</button>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</main>
+
+<!-- EDIT USER MODAL -->
+<div class="modal-bg" id="editModal">
+  <div class="modal-box">
+    <div class="modal-title" id="editModalTitle">Edit User</div>
+    <div class="alert err" id="editErr"></div>
+    <input type="hidden" id="editUid">
+    <div class="form-group"><label class="form-lbl">Display Name</label><input class="form-inp" id="editName"></div>
+    <div class="form-group"><label class="form-lbl">Role</label>
+      <select class="form-inp" id="editRole">
+        <option value="user">User</option>
+        <option value="admin">Admin</option>
+      </select>
+    </div>
+    <div class="form-group"><label class="form-lbl">Status</label>
+      <select class="form-inp" id="editStatus">
+        <option value="active">Active</option>
+        <option value="suspended">Suspended</option>
+      </select>
+    </div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModal('editModal')">Cancel</button>
+      <button class="btn-confirm" onclick="saveUser()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD USER MODAL -->
+<div class="modal-bg" id="addUserModal">
+  <div class="modal-box">
+    <div class="modal-title">Add New User</div>
+    <div class="alert err" id="addUserErr"></div>
+    <div class="alert ok" id="addUserOk"></div>
+    <div class="form-group"><label class="form-lbl">Full Name</label><input class="form-inp" id="auName" placeholder="John Doe"></div>
+    <div class="form-group"><label class="form-lbl">Email</label><input class="form-inp" id="auEmail" type="email" placeholder="user@example.com"></div>
+    <div class="form-group"><label class="form-lbl">Password</label><input class="form-inp" id="auPass" type="password" placeholder="Min. 6 characters"></div>
+    <div class="form-group"><label class="form-lbl">Recruited By (Customer ID)</label><input class="form-inp" id="auRecBy" placeholder="GG20100 (optional)"></div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModal('addUserModal')">Cancel</button>
+      <button class="btn-confirm" id="auBtn" onclick="addUser()">Create User</button>
+    </div>
+  </div>
+</div>
+
+<!-- PRODUCT MODAL -->
+<div class="modal-bg" id="prodModal">
+  <div class="modal-box">
+    <div class="modal-title" id="prodModalTitle">Add Product</div>
+    <div class="alert err" id="prodErr"></div>
+    <input type="hidden" id="prodEditId">
+    <div class="form-group"><label class="form-lbl">Product Name</label><input class="form-inp" id="prodName" placeholder="Product name"></div>
+    <div class="form-group"><label class="form-lbl">Description</label><input class="form-inp" id="prodDesc" placeholder="Short description"></div>
+    <div class="form-group"><label class="form-lbl">Price (₹)</label><input class="form-inp" type="number" id="prodPrice" placeholder="0"></div>
+    <div class="form-group"><label class="form-lbl">Points on Purchase</label><input class="form-inp" type="number" id="prodPoints" placeholder="0"></div>
+    <div class="form-group"><label class="form-lbl">Emoji Icon</label><input class="form-inp" id="prodEmoji" placeholder="📦"></div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModal('prodModal')">Cancel</button>
+      <button class="btn-confirm" onclick="saveProduct()">Save Product</button>
+    </div>
+  </div>
+</div>
+
+<!-- REWARD MODAL -->
+<div class="modal-bg" id="rewardModal">
+  <div class="modal-box">
+    <div class="modal-title" id="rewardModalTitle">Add Reward</div>
+    <div class="alert err" id="rewardErr"></div>
+    <input type="hidden" id="rewardEditId">
+    <div class="form-group"><label class="form-lbl">Reward Name</label><input class="form-inp" id="rewardName" placeholder="Reward name"></div>
+    <div class="form-group"><label class="form-lbl">Description</label><input class="form-inp" id="rewardDesc" placeholder="Short description"></div>
+    <div class="form-group"><label class="form-lbl">Points Required</label><input class="form-inp" type="number" id="rewardPts" placeholder="500"></div>
+    <div class="form-group"><label class="form-lbl">Emoji Icon</label><input class="form-inp" id="rewardEmoji" placeholder="🎁"></div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModal('rewardModal')">Cancel</button>
+      <button class="btn-confirm" onclick="saveReward()">Save Reward</button>
+    </div>
+  </div>
+</div>
+
+<!-- RESET CONFIRM MODAL -->
+<div class="modal-bg" id="resetModal">
+  <div class="modal-box" style="border-color:rgba(239,68,68,.3)">
+    <div class="modal-title" style="color:var(--red-l)">⚠️ Confirm Master Reset</div>
+    <p style="font-size:.84rem;color:var(--tm);margin-bottom:20px;line-height:1.7">Type your admin password to confirm. This will reset all points and global stats. <strong style="color:var(--red-l)">This cannot be undone.</strong></p>
+    <div class="alert err" id="resetConfErr"></div>
+    <div class="form-group"><label class="form-lbl">Admin Password</label><input class="form-inp" id="resetConfPass" type="password" placeholder="Enter your password"></div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModal('resetModal')">Cancel</button>
+      <button class="btn-confirm btn-confirm-red" id="resetConfBtn" onclick="doMasterReset()">Yes, Reset Everything</button>
+    </div>
+  </div>
+</div>
+
+<script src="firebase-config.js"></script>
+<script>
+let allUsers=[];
+
+// ── Auth guard ─────────────────────────────────────────────
+auth.onAuthStateChanged(async u=>{
+  if(!u){ window.location.href='login.html'; return; }
+  const doc=await db.collection('users').doc(u.uid).get();
+  if(!doc.exists||doc.data().role!=='admin'){ alert('Access denied.'); auth.signOut(); window.location.href='login.html'; }
+  else loadAll();
+});
+
+function doLogout(){ auth.signOut().then(()=>window.location.href='login.html'); }
+
+// ── Tab switching ──────────────────────────────────────────
+const TABS={overview:'Overview',users:'Users',points:'Points',leaderboard:'Leaderboard',products:'Products',rewards:'Rewards',reset:'Master Reset'};
+function showTab(name){
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.sb-item').forEach(i=>i.classList.remove('active'));
+  document.getElementById('tab'+name.charAt(0).toUpperCase()+name.slice(1)).classList.add('active');
+  document.getElementById('topTitle').textContent=TABS[name]||name;
+  const items=document.querySelectorAll('.sb-item');
+  items.forEach(i=>{ if(i.textContent.trim().toLowerCase().includes(name.toLowerCase()))i.classList.add('active'); });
+}
+
+// ── Load all ───────────────────────────────────────────────
+function loadAll(){ loadOverview(); loadUsers(); loadLeaderboard(); loadProducts(); loadRewards(); loadPtsHistory(); loadLastReset(); }
+
+// OVERVIEW
+function loadOverview(){
+  db.collection('global_stats').doc('main').onSnapshot(s=>{
+    if(!s.exists)return;
+    const d=s.data();
+    document.getElementById('ovPool').textContent=(d.globalPool||0).toLocaleString();
+    document.getElementById('ovPts').textContent=(d.totalNetworkPoints||0).toLocaleString();
+    document.getElementById('ovPartners').textContent=(d.newPartners||0).toLocaleString();
+  });
+  db.collection('users').onSnapshot(s=>{ document.getElementById('ovTotal').textContent=s.size; });
+  db.collection('users').orderBy('createdAt','desc').limit(10).onSnapshot(s=>{
+    const tb=document.getElementById('ovRecent');
+    tb.innerHTML=s.docs.map(d=>{
+      const u=d.data(), date=u.createdAt?.toDate?.().toLocaleDateString('en-IN')||'—';
+      return `<tr><td>${u.displayName||'—'}</td><td><span class="cid-chip">${u.customerId||d.id}</span></td><td style="color:var(--tm);font-size:.78rem">${u.email||'—'}</td><td style="color:var(--gold-l);font-family:'Cinzel',serif">${(u.totalPoints||0).toLocaleString()}</td><td style="color:var(--tm);font-size:.78rem">${date}</td></tr>`;
+    }).join('');
+  });
+}
+
+// USERS
+function loadUsers(){
+  db.collection('users').orderBy('createdAt','desc').onSnapshot(s=>{
+    allUsers=s.docs.map(d=>({id:d.id,...d.data()}));
+    renderUsersTable(allUsers);
+  });
+}
+function renderUsersTable(users){
+  const tb=document.getElementById('usersTbody');
+  tb.innerHTML=users.map(u=>`<tr>
+    <td>${u.displayName||'—'}</td>
+    <td><span class="cid-chip">${u.customerId||u.id}</span></td>
+    <td style="color:var(--tm);font-size:.78rem">${u.email||'—'}</td>
+    <td><span class="role-chip ${u.role==='admin'?'role-admin':'role-user'}">${u.role||'user'}</span></td>
+    <td style="color:var(--gold-l);font-family:'Cinzel',serif">${(u.totalPoints||0).toLocaleString()}</td>
+    <td><div style="display:flex;gap:5px">
+      <button class="btn-sm btn-edit" onclick="openEdit('${u.id}')">Edit</button>
+      <button class="btn-sm btn-del" onclick="delUser('${u.id}','${u.displayName||u.id}')">Delete</button>
+    </div></td>
+  </tr>`).join('');
+}
+function filterUsers(){
+  const q=document.getElementById('userSearch').value.toLowerCase();
+  renderUsersTable(q?allUsers.filter(u=>(u.displayName||'').toLowerCase().includes(q)||(u.customerId||'').toLowerCase().includes(q)||(u.email||'').toLowerCase().includes(q)):allUsers);
+}
+
+// EDIT USER
+function openEdit(uid){
+  const u=allUsers.find(x=>x.id===uid); if(!u)return;
+  document.getElementById('editUid').value=uid;
+  document.getElementById('editName').value=u.displayName||'';
+  document.getElementById('editRole').value=u.role||'user';
+  document.getElementById('editStatus').value=u.status||'active';
+  document.getElementById('editModalTitle').textContent='Edit: '+(u.displayName||uid);
+  openModal('editModal');
+}
+async function saveUser(){
+  const uid=document.getElementById('editUid').value;
+  const name=document.getElementById('editName').value.trim();
+  const role=document.getElementById('editRole').value;
+  const status=document.getElementById('editStatus').value;
+  if(!name){ showMsgM('editErr','Name required.'); return; }
+  await db.collection('users').doc(uid).update({displayName:name,role,status});
+  closeModal('editModal');
+}
+async function delUser(uid, name){
+  if(!confirm(`Delete user "${name}"? This removes their Firestore record.`))return;
+  await db.collection('users').doc(uid).delete();
+}
+
+// ADD USER
+function openAddUser(){ document.getElementById('auName').value=''; document.getElementById('auEmail').value=''; document.getElementById('auPass').value=''; document.getElementById('auRecBy').value=''; openModal('addUserModal'); }
+async function addUser(){
+  const name=document.getElementById('auName').value.trim(), email=document.getElementById('auEmail').value.trim(), pass=document.getElementById('auPass').value, recBy=document.getElementById('auRecBy').value.trim();
+  if(!name||!email||!pass){ showMsgM('addUserErr','All fields required.'); return; }
+  document.getElementById('auBtn').disabled=true;
+  try{
+    // Call cloud function to create user
+    const resp=await fetch(`https://us-central1-YOUR_PROJECT_ID.cloudfunctions.net/createUser`,{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({name,email,password:pass,recruitedBy:recBy})
+    });
+    const data=await resp.json();
+    if(data.error) throw new Error(data.error);
+    showMsgM('addUserOk','User created! ID: '+data.customerId,'ok');
+  }catch(e){ showMsgM('addUserErr',e.message); }
+  document.getElementById('auBtn').disabled=false;
+}
+
+// LEADERBOARD ADMIN
+function loadLeaderboard(){
+  db.collection('users').orderBy('totalPoints','desc').onSnapshot(s=>{
+    const tb=document.getElementById('lbAdminBody');
+    tb.innerHTML=s.docs.map((d,i)=>{
+      const u=d.data();
+      return `<tr>
+        <td style="text-align:center;font-weight:700;color:var(--gold-l)">#${i+1}</td>
+        <td>${u.displayName||'—'}</td>
+        <td><span class="cid-chip">${u.customerId||d.id}</span></td>
+        <td style="color:var(--em-l)">${(u.directPoints||0).toLocaleString()}</td>
+        <td style="color:var(--gold-l)">${(u.firstOrbitPoints||0).toLocaleString()}</td>
+        <td style="color:#A78BFA">${(u.secondOrbitPoints||0).toLocaleString()}</td>
+        <td style="font-family:'Cinzel',serif;font-size:1rem;background:linear-gradient(135deg,var(--gold-l),var(--gold));-webkit-background-clip:text;background-clip:text;color:transparent">${(u.totalPoints||0).toLocaleString()}</td>
+        <td><button class="btn-sm btn-pts" onclick="openEdit('${d.id}')">Edit</button></td>
+      </tr>`;
+    }).join('');
+  });
+}
+
+// POINTS ADJUST
+async function adjustPoints(){
+  const cid=document.getElementById('ptsUserId').value.trim(), amount=parseInt(document.getElementById('ptsAmount').value)||0, reason=document.getElementById('ptsReason').value.trim()||'Admin adjustment';
+  if(!cid||!amount){ showMsg('ptsErr','Fill all fields.'); return; }
+  const snap=await db.collection('users').where('customerId','==',cid).limit(1).get();
+  if(snap.empty){ showMsg('ptsErr','User not found: '+cid); return; }
+  const doc=snap.docs[0]; const u=doc.data();
+  const newDp=(u.directPoints||0)+(amount>0?amount:0);
+  const newTotal=(u.totalPoints||0)+amount;
+  await doc.ref.update({directPoints:newDp,totalPoints:Math.max(0,newTotal)});
+  await db.collection('points_history').add({userId:doc.id,customerId:cid,points:amount,description:reason,createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+  // Update global
+  await db.collection('global_stats').doc('main').update({totalNetworkPoints:firebase.firestore.FieldValue.increment(amount)});
+  showMsg('ptsOk','Points updated for '+cid,'ok');
+}
+
+function loadPtsHistory(){
+  db.collection('points_history').orderBy('createdAt','desc').limit(30).onSnapshot(s=>{
+    const tb=document.getElementById('ptsHistory');
+    tb.innerHTML=s.docs.map(d=>{
+      const h=d.data(), date=h.createdAt?.toDate?.().toLocaleDateString('en-IN')||'—';
+      const clr=h.points>=0?'var(--em-l)':'var(--red-l)';
+      return `<tr><td><span class="cid-chip">${h.customerId||h.userId}</span></td><td style="color:${clr};font-weight:700">${h.points>=0?'+':''}${h.points}</td><td style="color:var(--tm)">${h.description||'—'}</td><td style="color:var(--tm);font-size:.78rem">${date}</td></tr>`;
+    }).join('');
+  });
+}
+
+// PRODUCTS
+function loadProducts(){
+  db.collection('products').onSnapshot(s=>{
+    const grid=document.getElementById('prodAdminGrid');
+    if(s.empty){ grid.innerHTML=`<div style="color:var(--tm);padding:20px">No products yet.</div>`; return; }
+    grid.innerHTML=s.docs.map(d=>{
+      const p=d.data();
+      return `<div class="prod-admin-card">
+        <div style="font-size:2rem;margin-bottom:8px">${p.emoji||'📦'}</div>
+        <div class="pname">${p.name}</div>
+        <div style="font-size:.8rem;color:var(--tm);margin:4px 0">${p.description||''}</div>
+        <div class="pprice">₹${(p.price||0).toLocaleString()}</div>
+        <div class="pactions">
+          <button class="btn-sm btn-edit" onclick="openEditProduct('${d.id}')">Edit</button>
+          <button class="btn-sm btn-del" onclick="delProduct('${d.id}')">Delete</button>
+          <button class="btn-sm" style="background:rgba(${p.active?'239,68,68':'16,185,129'},.1);border:1px solid rgba(${p.active?'239,68,68':'16,185,129'},.25);color:${p.active?'var(--red-l)':'var(--em-l)'}" onclick="toggleProduct('${d.id}',${p.active})">${p.active?'Hide':'Show'}</button>
+        </div>
+      </div>`;
+    }).join('');
+  });
+}
+function openAddProduct(){ document.getElementById('prodEditId').value=''; ['prodName','prodDesc','prodPrice','prodPoints','prodEmoji'].forEach(i=>document.getElementById(i).value=''); document.getElementById('prodModalTitle').textContent='Add Product'; openModal('prodModal'); }
+function openEditProduct(id){ db.collection('products').doc(id).get().then(d=>{ const p=d.data(); document.getElementById('prodEditId').value=id; document.getElementById('prodName').value=p.name||''; document.getElementById('prodDesc').value=p.description||''; document.getElementById('prodPrice').value=p.price||''; document.getElementById('prodPoints').value=p.points||''; document.getElementById('prodEmoji').value=p.emoji||''; document.getElementById('prodModalTitle').textContent='Edit Product'; openModal('prodModal'); }); }
+async function saveProduct(){
+  const id=document.getElementById('prodEditId').value;
+  const data={name:document.getElementById('prodName').value.trim(),description:document.getElementById('prodDesc').value.trim(),price:parseFloat(document.getElementById('prodPrice').value)||0,points:parseInt(document.getElementById('prodPoints').value)||0,emoji:document.getElementById('prodEmoji').value||'📦',active:true};
+  if(!data.name){ showMsgM('prodErr','Name required.'); return; }
+  id?await db.collection('products').doc(id).update(data):await db.collection('products').add({...data,createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+  closeModal('prodModal');
+}
+async function delProduct(id){ if(confirm('Delete this product?'))await db.collection('products').doc(id).delete(); }
+async function toggleProduct(id,active){ await db.collection('products').doc(id).update({active:!active}); }
+
+// REWARDS
+function loadRewards(){
+  db.collection('rewards').onSnapshot(s=>{
+    const grid=document.getElementById('rewardAdminGrid');
+    if(s.empty){ grid.innerHTML=`<div style="color:var(--tm);padding:20px">No rewards yet.</div>`; return; }
+    grid.innerHTML=s.docs.map(d=>{
+      const r=d.data();
+      return `<div class="prod-admin-card">
+        <div style="font-size:2rem;margin-bottom:8px">${r.emoji||'🎁'}</div>
+        <div class="pname">${r.name}</div>
+        <div style="font-size:.8rem;color:var(--tm);margin:4px 0">${r.description||''}</div>
+        <div class="pprice" style="color:var(--em-l)">${(r.pointsRequired||0).toLocaleString()} pts</div>
+        <div class="pactions">
+          <button class="btn-sm btn-edit" onclick="openEditReward('${d.id}')">Edit</button>
+          <button class="btn-sm btn-del" onclick="delReward('${d.id}')">Delete</button>
+        </div>
+      </div>`;
+    }).join('');
+  });
+}
+function openAddReward(){ document.getElementById('rewardEditId').value=''; ['rewardName','rewardDesc','rewardPts','rewardEmoji'].forEach(i=>document.getElementById(i).value=''); document.getElementById('rewardModalTitle').textContent='Add Reward'; openModal('rewardModal'); }
+function openEditReward(id){ db.collection('rewards').doc(id).get().then(d=>{ const r=d.data(); document.getElementById('rewardEditId').value=id; document.getElementById('rewardName').value=r.name||''; document.getElementById('rewardDesc').value=r.description||''; document.getElementById('rewardPts').value=r.pointsRequired||''; document.getElementById('rewardEmoji').value=r.emoji||''; document.getElementById('rewardModalTitle').textContent='Edit Reward'; openModal('rewardModal'); }); }
+async function saveReward(){
+  const id=document.getElementById('rewardEditId').value;
+  const data={name:document.getElementById('rewardName').value.trim(),description:document.getElementById('rewardDesc').value.trim(),pointsRequired:parseInt(document.getElementById('rewardPts').value)||0,emoji:document.getElementById('rewardEmoji').value||'🎁'};
+  if(!data.name){ showMsgM('rewardErr','Name required.'); return; }
+  id?await db.collection('rewards').doc(id).update(data):await db.collection('rewards').add({...data,createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+  closeModal('rewardModal');
+}
+async function delReward(id){ if(confirm('Delete this reward?'))await db.collection('rewards').doc(id).delete(); }
+
+// MASTER RESET
+function loadLastReset(){
+  db.collection('global_stats').doc('main').get().then(d=>{
+    if(!d.exists)return;
+    const lr=d.data().lastReset;
+    document.getElementById('lastReset').textContent=lr?.toDate?lr.toDate().toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'}):'Never';
+  });
+}
+function openResetModal(){ document.getElementById('resetConfPass').value=''; openModal('resetModal'); }
+async function doMasterReset(){
+  const pass=document.getElementById('resetConfPass').value;
+  if(!pass){ showMsgM('resetConfErr','Enter your password.'); return; }
+  const btn=document.getElementById('resetConfBtn'); btn.disabled=true; btn.textContent='Resetting…';
+  try{
+    // Re-authenticate
+    const user=auth.currentUser;
+    const cred=firebase.auth.EmailAuthProvider.credential(user.email,pass);
+    await user.reauthenticateWithCredential(cred);
+    // Reset global stats
+    await db.collection('global_stats').doc('main').set({globalPool:0,totalNetworkPoints:0,teamSupportPoints:0,newPartners:0,lastReset:firebase.firestore.FieldValue.serverTimestamp()});
+    // Reset all user points in batches
+    const usersSnap=await db.collection('users').get();
+    const BATCH_SIZE=400;
+    for(let i=0;i<usersSnap.docs.length;i+=BATCH_SIZE){
+      const batch=db.batch();
+      usersSnap.docs.slice(i,i+BATCH_SIZE).forEach(d=>batch.update(d.ref,{directPoints:0,firstOrbitPoints:0,secondOrbitPoints:0,totalPoints:0,directRecruits:0}));
+      await batch.commit();
+    }
+    closeModal('resetModal');
+    alert('✅ Master reset complete. All points and stats have been reset.');
+    loadLastReset();
+  }catch(e){
+    showMsgM('resetConfErr',e.code==='auth/wrong-password'?'Wrong password.':e.message);
+  }
+  btn.disabled=false; btn.textContent='Yes, Reset Everything';
+}
+
+// ── Utility ────────────────────────────────────────────────
+function openModal(id){ document.getElementById(id).classList.add('open'); }
+function closeModal(id){ document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-bg').forEach(m=>m.addEventListener('click',e=>{ if(e.target===m)m.classList.remove('open'); }));
+function showMsg(id,msg,type='err'){ const el=document.getElementById(id); el.textContent=msg; el.className=`alert ${type} show`; setTimeout(()=>el.classList.remove('show'),5000); }
+function showMsgM(id,msg,type='err'){ showMsg(id,msg,type); }
+</script>
+</body>
+</html>
