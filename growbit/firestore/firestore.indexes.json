@@ -1,0 +1,45 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "users",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "totalPoints", "order": "DESCENDING" },
+        { "fieldPath": "createdAt",   "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "users",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "recruitedBy", "order": "ASCENDING" },
+        { "fieldPath": "totalPoints", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "points_history",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "userId",    "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "monthly_history",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "userId", "order": "ASCENDING" },
+        { "fieldPath": "month",  "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "recruitments",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "recruiterId", "order": "ASCENDING" },
+        { "fieldPath": "createdAt",   "order": "DESCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

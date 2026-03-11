@@ -1,0 +1,67 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Helper functions ─────────────────────────────────────
+    function isAuth()  { return request.auth != null; }
+    function isAdmin() {
+      return isAuth() &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    function isOwner(uid) { return isAuth() && request.auth.uid == uid; }
+
+    // ── Users ────────────────────────────────────────────────
+    match /users/{userId} {
+      // Anyone can read user list (for leaderboard)
+      allow read: if true;
+      // Only the owner or admin can write
+      allow write: if isOwner(userId) || isAdmin();
+    }
+
+    // ── Global Stats (public read, admin write) ───────────────
+    match /global_stats/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // ── Leaderboard (public read, admin write) ────────────────
+    match /leaderboard/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // ── Recruitments (auth read, system/admin write) ──────────
+    match /recruitments/{docId} {
+      allow read: if isAuth();
+      allow write: if isAdmin();  // Cloud Functions use admin SDK (bypasses rules)
+    }
+
+    // ── Points History (owner/admin read) ─────────────────────
+    match /points_history/{docId} {
+      allow read: if isAuth() && (
+        resource.data.userId == request.auth.uid || isAdmin()
+      );
+      allow write: if isAdmin();
+    }
+
+    // ── Monthly History (owner/admin read) ────────────────────
+    match /monthly_history/{docId} {
+      allow read: if isAuth() && (
+        resource.data.userId == request.auth.uid || isAdmin()
+      );
+      allow write: if isAdmin();
+    }
+
+    // ── Products (public read, admin write) ───────────────────
+    match /products/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // ── Rewards (auth read, admin write) ─────────────────────
+    match /rewards/{docId} {
+      allow read: if isAuth();
+      allow write: if isAdmin();
+    }
+  }
+}
