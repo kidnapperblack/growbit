@@ -1,0 +1,967 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Dashboard — IncomePro</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Noto+Sans+Devanagari:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <style>
+  /* ══════════════════════════════════════════════════════════
+     ADMIN DASHBOARD — SELF-CONTAINED STYLES
+  ══════════════════════════════════════════════════════════ */
+  :root {
+    --bg:        #03050d;
+    --s1:        #080c18;
+    --s2:        #0d1225;
+    --s3:        rgba(255,255,255,0.04);
+    --s4:        rgba(255,255,255,0.07);
+    --border:    rgba(255,255,255,0.08);
+    --green:     #00f082;
+    --gd:        rgba(0,240,130,0.1);
+    --gb:        rgba(0,240,130,0.22);
+    --gold:      #f5c842;
+    --gob:       rgba(245,200,66,0.22);
+    --red:       #ff4f6d;
+    --blue:      #4fa3ff;
+    --text1:     #eef2ff;
+    --text2:     rgba(238,242,255,0.6);
+    --text3:     rgba(238,242,255,0.3);
+    --font:      'Outfit', sans-serif;
+    --fh:        'Noto Sans Devanagari', sans-serif;
+    --r:         14px;
+    --ease:      cubic-bezier(0.16,1,0.3,1);
+    --shadow:    0 8px 40px rgba(0,0,0,0.5);
+    --gg:        0 0 40px rgba(0,240,130,0.3);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text1);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--green); border-radius: 10px; }
+
+  /* ── LAYOUT ── */
+  .layout { display: flex; min-height: 100vh; }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    width: 230px; flex-shrink: 0;
+    background: rgba(8,12,24,0.98);
+    border-right: 1px solid var(--border);
+    padding: 24px 16px;
+    position: sticky; top: 0; height: 100vh;
+    display: flex; flex-direction: column; gap: 4px;
+    overflow-y: auto;
+  }
+  .sb-logo {
+    font-size: 1.2rem; font-weight: 900; letter-spacing: -0.5px;
+    color: var(--text1); margin-bottom: 4px;
+  }
+  .sb-logo span { color: var(--green); }
+  .sb-role {
+    font-size: 0.68rem; color: var(--text3); letter-spacing: 1px;
+    text-transform: uppercase; margin-bottom: 28px;
+    padding-bottom: 20px; border-bottom: 1px solid var(--border);
+  }
+  .sb-section { font-size: 0.65rem; color: var(--text3); letter-spacing: 1px; text-transform: uppercase; padding: 12px 12px 4px; }
+  .nav-link {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px; border-radius: 10px;
+    color: var(--text2); cursor: pointer; transition: all 0.2s;
+    font-size: 0.85rem; font-weight: 500; text-decoration: none;
+    border: none; background: none; width: 100%; text-align: left;
+  }
+  .nav-link:hover { background: var(--gd); color: var(--green); }
+  .nav-link.active { background: var(--gd); color: var(--green); border: 1px solid var(--gb); }
+  .nav-link .ni { font-size: 1rem; width: 18px; text-align: center; }
+  .sb-footer {
+    margin-top: auto; padding-top: 16px; border-top: 1px solid var(--border);
+    font-size: 0.68rem; color: var(--text3);
+    font-family: var(--fh); line-height: 1.6;
+  }
+  .sb-footer a { color: var(--green); text-decoration: none; }
+
+  /* ── MAIN ── */
+  .main { flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
+
+  /* ── TOPBAR ── */
+  .topbar {
+    position: sticky; top: 0; z-index: 20;
+    padding: 16px 28px;
+    display: flex; align-items: center; justify-content: space-between;
+    background: rgba(3,5,13,0.92);
+    border-bottom: 1px solid var(--border);
+    backdrop-filter: blur(16px);
+    flex-wrap: wrap; gap: 12px;
+  }
+  .topbar-title { font-size: 1rem; font-weight: 700; }
+  .topbar-right { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+
+  .btn-icon {
+    padding: 8px 16px; border-radius: 50px;
+    font-family: var(--font); font-size: 0.78rem; font-weight: 700;
+    cursor: pointer; transition: all 0.25s; border: none; display: inline-flex; align-items: center; gap: 7px;
+  }
+  .btn-outline { background: var(--gd); border: 1px solid var(--gb); color: var(--green); }
+  .btn-outline:hover { background: var(--green); color: var(--bg); box-shadow: var(--gg); }
+  .btn-solid { background: linear-gradient(135deg, var(--green), #00c869); color: var(--bg); }
+  .btn-solid:hover { box-shadow: var(--gg); transform: translateY(-1px); }
+  .btn-gold { background: linear-gradient(135deg, var(--gold), #f5a200); color: var(--bg); }
+  .btn-gold:hover { box-shadow: 0 0 20px rgba(245,200,66,0.4); transform: translateY(-1px); }
+  .btn-red { background: rgba(255,79,109,0.1); border: 1px solid rgba(255,79,109,0.25); color: var(--red); }
+  .btn-red:hover { background: var(--red); color: #fff; }
+
+  /* ── CONTENT ── */
+  .content { padding: 24px 28px; flex: 1; }
+
+  /* ── SECTION PANELS ── */
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  /* ── STAT CARDS ── */
+  .stats-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; margin-bottom: 24px; }
+  .stat-card {
+    padding: 22px 18px;
+    background: var(--s3);
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    position: relative; overflow: hidden;
+    transition: border-color 0.3s, transform 0.2s;
+    cursor: default;
+  }
+  .stat-card:hover { transform: translateY(-2px); }
+  .stat-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: var(--accent-color, var(--green));
+  }
+  .stat-card.c-g { --accent-color: var(--green); }
+  .stat-card.c-g:hover { border-color: var(--gb); }
+  .stat-card.c-o { --accent-color: var(--gold); }
+  .stat-card.c-o:hover { border-color: var(--gob); }
+  .stat-card.c-b { --accent-color: var(--blue); }
+  .stat-card.c-b:hover { border-color: rgba(79,163,255,0.25); }
+  .stat-card.c-r { --accent-color: var(--red); }
+  .stat-card.c-r:hover { border-color: rgba(255,79,109,0.25); }
+  .sc-icon { font-size: 1.3rem; margin-bottom: 10px; }
+  .sc-num { font-size: 2rem; font-weight: 900; line-height: 1; margin-bottom: 4px; }
+  .stat-card.c-g .sc-num { color: var(--green); }
+  .stat-card.c-o .sc-num { color: var(--gold); }
+  .stat-card.c-b .sc-num { color: var(--blue); }
+  .stat-card.c-r .sc-num { color: var(--red); }
+  .sc-lbl { font-size: 0.75rem; color: var(--text3); font-family: var(--fh); }
+
+  /* ── TABLE CARD ── */
+  .table-card {
+    background: var(--s3);
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    overflow: hidden;
+  }
+  .table-hdr {
+    padding: 18px 22px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 12px;
+  }
+  .table-hdr-title { font-size: 0.95rem; font-weight: 700; }
+  .search-input {
+    padding: 8px 14px;
+    background: var(--s4);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text1);
+    font-family: var(--font); font-size: 0.82rem;
+    outline: none; width: 220px;
+    transition: border-color 0.25s;
+  }
+  .search-input:focus { border-color: var(--gb); }
+  .search-input::placeholder { color: var(--text3); }
+
+  .tbl-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; }
+  thead tr { background: rgba(255,255,255,0.025); }
+  th {
+    padding: 12px 18px; text-align: left;
+    font-size: 0.68rem; font-weight: 700;
+    color: var(--text3); text-transform: uppercase; letter-spacing: 0.8px;
+    border-bottom: 1px solid var(--border); white-space: nowrap;
+  }
+  td {
+    padding: 12px 18px; font-size: 0.85rem;
+    border-bottom: 1px solid rgba(255,255,255,0.035);
+    transition: background 0.15s;
+  }
+  tr:last-child td { border-bottom: none; }
+  tbody tr:hover td { background: rgba(255,255,255,0.025); }
+
+  .td-name { font-weight: 600; }
+  .td-mobile { font-variant-numeric: tabular-nums; color: var(--text2); }
+  .td-city {
+    display: inline-block;
+    padding: 3px 10px; border-radius: 50px;
+    background: rgba(245,200,66,0.08); color: var(--gold);
+    font-family: var(--fh); font-size: 0.78rem;
+  }
+  .badge-today {
+    display: inline-block; padding: 3px 9px; border-radius: 50px;
+    background: var(--gd); color: var(--green);
+    font-size: 0.68rem; font-weight: 700;
+  }
+  .badge-old {
+    display: inline-block; padding: 3px 9px; border-radius: 50px;
+    background: var(--s4); color: var(--text3);
+    font-size: 0.68rem;
+  }
+
+  /* Empty / Loading states */
+  .tbl-empty, .tbl-loading {
+    padding: 52px 24px; text-align: center;
+    color: var(--text3); font-family: var(--fh); font-size: 0.9rem;
+  }
+  .spinner {
+    width: 32px; height: 32px;
+    border: 3px solid var(--border); border-top-color: var(--green);
+    border-radius: 50%; animation: spin 0.75s linear infinite;
+    margin: 0 auto 14px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── PAGINATION ── */
+  .pagination {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 22px; border-top: 1px solid var(--border);
+    flex-wrap: wrap; gap: 10px;
+  }
+  .pg-info { font-size: 0.75rem; color: var(--text3); }
+  .pg-btns { display: flex; gap: 5px; }
+  .pg-btn {
+    width: 30px; height: 30px; border-radius: 8px;
+    background: var(--s4); border: 1px solid var(--border);
+    color: var(--text2); cursor: pointer; font-size: 0.78rem;
+    transition: all 0.2s; display: flex; align-items: center; justify-content: center;
+  }
+  .pg-btn:hover, .pg-btn.active {
+    background: var(--gd); border-color: var(--gb); color: var(--green);
+  }
+  .pg-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+  /* ══════════════════════════════
+     CONTROL PANEL (Admin Settings)
+  ══════════════════════════════ */
+  .cp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+
+  .cp-card {
+    background: var(--s3); border: 1px solid var(--border);
+    border-radius: var(--r); padding: 22px 20px;
+    position: relative; overflow: hidden;
+  }
+  .cp-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1.5px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  }
+  .cp-title {
+    font-size: 0.88rem; font-weight: 800; color: var(--gold);
+    margin-bottom: 16px; display: flex; align-items: center; gap: 8px;
+  }
+  .cp-desc { font-size: 0.75rem; color: var(--text3); font-family: var(--fh); margin-bottom: 14px; line-height: 1.6; }
+
+  .cp-field { margin-bottom: 14px; }
+  .cp-label {
+    display: block; font-size: 0.68rem; color: var(--text3);
+    margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;
+  }
+  .cp-input {
+    width: 100%; padding: 11px 14px;
+    background: var(--s4); border: 1px solid var(--border);
+    border-radius: 8px; color: var(--text1);
+    font-family: var(--font); font-size: 0.88rem;
+    outline: none; transition: border-color 0.25s;
+  }
+  .cp-input:focus { border-color: var(--gb); }
+  .cp-input::placeholder { color: var(--text3); }
+
+  /* Preview box for poster */
+  .poster-preview-wrap {
+    margin-bottom: 14px;
+    border-radius: 10px; overflow: hidden;
+    border: 1px solid var(--border);
+    background: var(--s2);
+    aspect-ratio: 3/2;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--text3); font-size: 0.8rem; font-family: var(--fh);
+    position: relative;
+  }
+  .poster-preview-wrap img {
+    width: 100%; height: 100%; object-fit: cover; display: none;
+  }
+
+  /* Status message */
+  .save-status {
+    font-size: 0.75rem; font-family: var(--fh); margin-top: 10px;
+    padding: 8px 12px; border-radius: 8px; display: none;
+  }
+  .save-status.ok  { background: var(--gd); color: var(--green); border: 1px solid var(--gb); }
+  .save-status.err { background: rgba(255,79,109,0.1); color: var(--red); border: 1px solid rgba(255,79,109,0.25); }
+
+  /* Setup panel */
+  .setup-card {
+    background: var(--s3); border: 1px solid rgba(245,200,66,0.15);
+    border-radius: var(--r); padding: 24px 22px; margin-bottom: 24px;
+  }
+  .setup-title {
+    font-size: 0.95rem; font-weight: 800; color: var(--gold);
+    margin-bottom: 6px; display: flex; align-items: center; gap: 8px;
+  }
+  .setup-hint { font-size: 0.78rem; color: var(--text3); font-family: var(--fh); margin-bottom: 16px; line-height: 1.7; }
+  .setup-row { display: flex; gap: 10px; }
+  .setup-input {
+    flex: 1; padding: 12px 14px;
+    background: var(--s4); border: 1px solid var(--border);
+    border-radius: 8px; color: var(--text1);
+    font-family: var(--font); font-size: 0.88rem; outline: none;
+    transition: border-color 0.25s;
+  }
+  .setup-input:focus { border-color: var(--gb); }
+  .setup-input::placeholder { color: var(--text3); }
+
+  /* Toast */
+  .toast-area {
+    position: fixed; bottom: 20px; right: 20px; z-index: 500;
+    display: flex; flex-direction: column; gap: 8px; pointer-events: none;
+  }
+  .toast {
+    padding: 11px 16px; background: var(--s2); border: 1px solid var(--border);
+    border-radius: var(--r); font-size: 0.82rem; font-family: var(--fh);
+    max-width: 280px; box-shadow: var(--shadow); pointer-events: auto;
+    display: flex; align-items: center; gap: 8px;
+    animation: toastIn 0.35s var(--ease) both;
+  }
+  .toast.ok  { border-color: var(--gb); color: var(--green); }
+  .toast.err { border-color: rgba(255,79,109,0.3); color: var(--red); }
+  @keyframes toastIn {
+    from { opacity:0; transform: translateX(16px); }
+    to   { opacity:1; transform: translateX(0); }
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 960px) {
+    .sidebar { display: none; }
+    .stats-grid { grid-template-columns: 1fr 1fr; }
+    .cp-grid { grid-template-columns: 1fr; }
+    .content { padding: 16px; }
+    .topbar { padding: 14px 16px; }
+    .search-input { width: 100%; }
+  }
+  @media (max-width: 520px) {
+    .stats-grid { grid-template-columns: 1fr 1fr; }
+    th:nth-child(5), td:nth-child(5) { display: none; }
+  }
+  </style>
+</head>
+<body>
+
+<div class="layout">
+
+  <!-- ════════════════════════════════
+       SIDEBAR
+  ════════════════════════════════ -->
+  <aside class="sidebar">
+    <div class="sb-logo">Income<span>Pro</span></div>
+    <div class="sb-role">⚡ Admin Dashboard</div>
+
+    <div class="sb-section">Analytics</div>
+    <button class="nav-link active" onclick="showPanel('leads')" id="nav-leads">
+      <span class="ni">📊</span> Dashboard
+    </button>
+    <button class="nav-link" onclick="showPanel('leads')" id="nav-all">
+      <span class="ni">👥</span> All Leads
+    </button>
+
+    <div class="sb-section">Control</div>
+    <button class="nav-link" onclick="showPanel('settings')" id="nav-settings">
+      <span class="ni">⚙️</span> Settings
+    </button>
+    <button class="nav-link" onclick="showPanel('settings')">
+      <span class="ni">🖼️</span> Poster Manager
+    </button>
+    <button class="nav-link" onclick="showPanel('settings')">
+      <span class="ni">⏱️</span> Timer Control
+    </button>
+
+    <div class="sb-section">Tools</div>
+    <button class="nav-link" onclick="exportCSV()">
+      <span class="ni">📥</span> Export CSV
+    </button>
+    <a href="index.html" class="nav-link" target="_blank">
+      <span class="ni">🌐</span> Landing Page ↗
+    </a>
+
+    <div class="sb-footer">
+      <p>डेटा: Google Sheet से</p>
+      <p style="margin-top:5px;"><a href="#" onclick="loadAll()">🔄 Refresh Data</a></p>
+    </div>
+  </aside>
+
+  <!-- ════════════════════════════════
+       MAIN CONTENT
+  ════════════════════════════════ -->
+  <div class="main">
+
+    <!-- TOPBAR -->
+    <div class="topbar">
+      <div class="topbar-title" id="topbar-title">📋 Lead Dashboard</div>
+      <div class="topbar-right">
+        <button class="btn-icon btn-outline" onclick="loadAll()">🔄 Refresh</button>
+        <button class="btn-icon btn-solid" onclick="exportCSV()">📥 CSV Export</button>
+        <button class="btn-icon btn-gold" onclick="showPanel('settings')">⚙️ Settings</button>
+      </div>
+    </div>
+
+    <!-- CONTENT AREA -->
+    <div class="content">
+
+      <!-- ══ SETUP CARD (shown until URL is configured) ══ -->
+      <div class="setup-card" id="setup-card">
+        <div class="setup-title">🔧 Google Apps Script URL Setup</div>
+        <p class="setup-hint">
+          नीचे अपना deployed Google Apps Script Web App URL डालें और Save करें।<br>
+          यह URL dashboard को Google Sheet से connect करेगा।<br>
+          <strong style="color:var(--gold);">apps-script.gs</strong> deploy करने के बाद URL मिलेगा।
+        </p>
+        <div class="setup-row">
+          <input
+            type="text"
+            class="setup-input"
+            id="gas-url-input"
+            placeholder="https://script.google.com/macros/s/YOUR_ID/exec"
+          />
+          <button class="btn-icon btn-solid" onclick="saveGasUrl()">💾 Save & Connect</button>
+        </div>
+      </div>
+
+      <!-- ══════════ PANEL: LEADS ══════════ -->
+      <div class="panel active" id="panel-leads">
+
+        <!-- Stat Cards -->
+        <div class="stats-grid">
+          <div class="stat-card c-g">
+            <div class="sc-icon">📋</div>
+            <div class="sc-num" id="s-total">—</div>
+            <div class="sc-lbl">कुल Leads</div>
+          </div>
+          <div class="stat-card c-o">
+            <div class="sc-icon">📅</div>
+            <div class="sc-num" id="s-today">—</div>
+            <div class="sc-lbl">आज के Leads</div>
+          </div>
+          <div class="stat-card c-b">
+            <div class="sc-icon">🏙️</div>
+            <div class="sc-num" id="s-cities">—</div>
+            <div class="sc-lbl">शहर</div>
+          </div>
+          <div class="stat-card c-r">
+            <div class="sc-icon">📆</div>
+            <div class="sc-num" id="s-week">—</div>
+            <div class="sc-lbl">इस हफ्ते</div>
+          </div>
+        </div>
+
+        <!-- Leads Table -->
+        <div class="table-card">
+          <div class="table-hdr">
+            <div class="table-hdr-title">👥 All Registrations</div>
+            <input
+              type="text"
+              class="search-input"
+              id="search-box"
+              placeholder="🔍 नाम, मोबाइल, शहर खोजें..."
+              oninput="filterTable()"
+            />
+          </div>
+
+          <div class="tbl-wrap">
+            <div id="tbl-body">
+              <div class="tbl-loading">
+                <div class="spinner"></div>
+                <p>डेटा लोड होने की प्रतीक्षा करें...<br><small style="font-size:0.72rem;margin-top:6px;display:block;">ऊपर Apps Script URL configure करें</small></p>
+              </div>
+            </div>
+          </div>
+
+          <div class="pagination" id="pagination" style="display:none">
+            <div class="pg-info" id="pg-info"></div>
+            <div class="pg-btns" id="pg-btns"></div>
+          </div>
+        </div>
+
+      </div><!-- /panel-leads -->
+
+      <!-- ══════════ PANEL: SETTINGS ══════════ -->
+      <div class="panel" id="panel-settings">
+        <div class="cp-grid">
+
+          <!-- 1. Poster Manager -->
+          <div class="cp-card">
+            <div class="cp-title">🖼️ Poster Manager</div>
+            <p class="cp-desc">
+              Landing Page पर दिखने वाला पोस्टर बदलें।<br>
+              किसी भी image का direct URL डालें।
+            </p>
+            <div class="poster-preview-wrap" id="poster-preview-wrap">
+              <span id="poster-preview-ph">Preview यहाँ दिखेगा</span>
+              <img id="poster-preview-img" alt="Poster Preview" />
+            </div>
+            <div class="cp-field">
+              <label class="cp-label">Poster Image URL</label>
+              <input
+                type="url"
+                class="cp-input"
+                id="cp-poster-url"
+                placeholder="https://example.com/poster.jpg"
+                oninput="previewPoster(this.value)"
+              />
+            </div>
+            <button class="btn-icon btn-gold" onclick="saveSetting('posterUrl', 'cp-poster-url', 'poster-status')">
+              💾 Poster Save करें
+            </button>
+            <div class="save-status" id="poster-status"></div>
+          </div>
+
+          <!-- 2. Countdown Timer -->
+          <div class="cp-card">
+            <div class="cp-title">⏱️ Countdown Timer</div>
+            <p class="cp-desc">
+              Landing Page पर दिखने वाला countdown timer set करें।<br>
+              वह date/time चुनें जब registration बंद होगा।
+            </p>
+            <div class="cp-field">
+              <label class="cp-label">Timer End Date & Time</label>
+              <input
+                type="datetime-local"
+                class="cp-input"
+                id="cp-countdown"
+              />
+            </div>
+            <button class="btn-icon btn-gold" onclick="saveCountdown()">
+              💾 Timer Save करें
+            </button>
+            <div class="save-status" id="countdown-status"></div>
+          </div>
+
+          <!-- 3. Registration Counter -->
+          <div class="cp-card">
+            <div class="cp-title">🔢 Registration Counter</div>
+            <p class="cp-desc">
+              Landing Page पर "आज रजिस्टर किए" वाला counter manually set करें।<br>
+              यह actual submissions + base number होगा।
+            </p>
+            <div class="cp-field">
+              <label class="cp-label">Counter Base Value (आज का starting number)</label>
+              <input
+                type="number"
+                class="cp-input"
+                id="cp-reg-count"
+                placeholder="जैसे: 24"
+                min="0"
+                max="9999"
+              />
+            </div>
+            <button class="btn-icon btn-gold" onclick="saveSetting('regCount', 'cp-reg-count', 'counter-status')">
+              💾 Counter Save करें
+            </button>
+            <div class="save-status" id="counter-status"></div>
+          </div>
+
+          <!-- 4. WhatsApp Number -->
+          <div class="cp-card">
+            <div class="cp-title">💬 WhatsApp Number</div>
+            <p class="cp-desc">
+              Registration के बाद user को जिस WhatsApp number पर redirect करें।<br>
+              Country code के साथ डालें (91XXXXXXXXXX)
+            </p>
+            <div class="cp-field">
+              <label class="cp-label">WhatsApp Number (Country Code + Number)</label>
+              <input
+                type="text"
+                class="cp-input"
+                id="cp-wa-number"
+                placeholder="919876543210"
+                maxlength="15"
+                inputmode="numeric"
+              />
+            </div>
+            <button class="btn-icon btn-gold" onclick="saveSetting('waNumber', 'cp-wa-number', 'wa-status')">
+              💾 Number Save करें
+            </button>
+            <div class="save-status" id="wa-status"></div>
+          </div>
+
+        </div>
+      </div><!-- /panel-settings -->
+
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div><!-- /layout -->
+
+<!-- TOAST AREA -->
+<div class="toast-area" id="toast-area"></div>
+
+<!-- ════════════════════════════════
+     DASHBOARD SCRIPT
+════════════════════════════════ -->
+<script>
+/* ══════════════════════════════════════
+   DASHBOARD STATE
+══════════════════════════════════════ */
+const DB = {
+  gasUrl:       localStorage.getItem('ipro_gas_url') || '',
+  allLeads:     [],
+  filtered:     [],
+  page:         1,
+  pageSize:     20,
+  todayStr:     new Date().toLocaleDateString('en-IN'),
+};
+
+/* ── On load ── */
+window.addEventListener('DOMContentLoaded', () => {
+  // Pre-fill saved URL
+  const urlInput = document.getElementById('gas-url-input');
+  if (DB.gasUrl) {
+    urlInput.value = DB.gasUrl;
+    document.getElementById('setup-card').style.opacity = '0.5';
+    loadAll();
+    loadSettings();
+  }
+
+  // Set countdown min to now
+  const cdInput = document.getElementById('cp-countdown');
+  if (cdInput) cdInput.min = new Date().toISOString().slice(0,16);
+});
+
+/* ══════════════════════════════════════
+   URL SETUP
+══════════════════════════════════════ */
+function saveGasUrl() {
+  const val = document.getElementById('gas-url-input').value.trim();
+  if (!val || !val.startsWith('https://script.google.com')) {
+    toast('❌ Valid Google Apps Script URL डालें', 'err');
+    return;
+  }
+  DB.gasUrl = val;
+  localStorage.setItem('ipro_gas_url', val);
+  document.getElementById('setup-card').style.opacity = '0.5';
+  toast('✅ URL save हो गया! Data load हो रहा है...', 'ok');
+  loadAll();
+  loadSettings();
+}
+
+/* ══════════════════════════════════════
+   PANEL NAVIGATION
+══════════════════════════════════════ */
+function showPanel(id) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('panel-' + id).classList.add('active');
+
+  document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+  const titles = { leads: '📋 Lead Dashboard', settings: '⚙️ Admin Settings' };
+  document.getElementById('topbar-title').textContent = titles[id] || '📋 Dashboard';
+}
+
+/* ══════════════════════════════════════
+   LOAD ALL DATA
+══════════════════════════════════════ */
+async function loadAll() {
+  if (!DB.gasUrl) return;
+  showLoading();
+  try {
+    const url = `${DB.gasUrl}?action=getLeads&t=${Date.now()}`;
+    const res = await fetch(url);
+    const data = await res.json();
+
+    if (data.status === 'success') {
+      DB.allLeads = data.leads || [];
+    } else {
+      throw new Error(data.message || 'Unknown error');
+    }
+  } catch(e) {
+    toast('⚠️ Data load नहीं हुआ: ' + e.message, 'err');
+    DB.allLeads = [];
+  }
+
+  DB.filtered = [...DB.allLeads];
+  DB.page = 1;
+  updateStats();
+  renderTable();
+}
+
+/* ══════════════════════════════════════
+   LOAD SETTINGS (for control panel)
+══════════════════════════════════════ */
+async function loadSettings() {
+  if (!DB.gasUrl) return;
+  try {
+    const res = await fetch(`${DB.gasUrl}?action=getSettings&t=${Date.now()}`);
+    const data = await res.json();
+    if (data.status === 'success' && data.settings) {
+      const s = data.settings;
+
+      // Pre-fill settings form
+      if (s.posterUrl)   document.getElementById('cp-poster-url').value  = s.posterUrl;
+      if (s.regCount)    document.getElementById('cp-reg-count').value    = s.regCount;
+      if (s.waNumber)    document.getElementById('cp-wa-number').value    = s.waNumber;
+      if (s.countdownISO) {
+        const dt = new Date(s.countdownISO);
+        if (!isNaN(dt)) {
+          document.getElementById('cp-countdown').value = dt.toISOString().slice(0,16);
+        }
+      }
+
+      // Show poster preview if URL exists
+      if (s.posterUrl) previewPoster(s.posterUrl);
+    }
+  } catch(e) {
+    console.warn('Settings load failed:', e);
+  }
+}
+
+/* ══════════════════════════════════════
+   STATS
+══════════════════════════════════════ */
+function updateStats() {
+  const leads  = DB.allLeads;
+  const today  = DB.todayStr;
+
+  const weekAgo = new Date(Date.now() - 7 * 86400000);
+  const todayLeads = leads.filter(l => l.date === today).length;
+  const cities     = new Set(leads.map(l => l.city)).size;
+  const weekLeads  = leads.filter(l => {
+    const parts = (l.date || '').split('/');
+    if (parts.length < 3) return false;
+    const d = new Date(`${parts[1]}/${parts[0]}/${parts[2]}`);
+    return d >= weekAgo;
+  }).length;
+
+  setEl('s-total',  leads.length);
+  setEl('s-today',  todayLeads);
+  setEl('s-cities', cities);
+  setEl('s-week',   weekLeads);
+}
+
+/* ══════════════════════════════════════
+   TABLE RENDER + FILTER + PAGINATION
+══════════════════════════════════════ */
+function filterTable() {
+  const q = (document.getElementById('search-box')?.value || '').toLowerCase().trim();
+  DB.filtered = q
+    ? DB.allLeads.filter(l =>
+        (l.name   || '').toLowerCase().includes(q) ||
+        (l.mobile || '').includes(q) ||
+        (l.city   || '').toLowerCase().includes(q)
+      )
+    : [...DB.allLeads];
+  DB.page = 1;
+  renderTable();
+}
+
+function renderTable() {
+  const total = DB.filtered.length;
+  const pages = Math.ceil(total / DB.pageSize) || 1;
+  const start = (DB.page - 1) * DB.pageSize;
+  const end   = Math.min(start + DB.pageSize, total);
+  const slice = DB.filtered.slice(start, end);
+  const today = DB.todayStr;
+
+  if (total === 0) {
+    document.getElementById('tbl-body').innerHTML =
+      `<div class="tbl-empty">कोई lead नहीं मिली</div>`;
+    document.getElementById('pagination').style.display = 'none';
+    return;
+  }
+
+  const rows = slice.map((l, i) => `
+    <tr>
+      <td style="color:var(--text3);font-size:0.72rem;">${start + i + 1}</td>
+      <td class="td-name">${esc(l.name)}</td>
+      <td class="td-mobile">${esc(l.mobile)}</td>
+      <td><span class="td-city">${esc(l.city)}</span></td>
+      <td>
+        <span class="${l.date === today ? 'badge-today' : 'badge-old'}">${esc(l.date)}</span>
+      </td>
+      <td style="color:var(--text3);font-size:0.78rem;">${esc(l.time)}</td>
+    </tr>
+  `).join('');
+
+  document.getElementById('tbl-body').innerHTML = `
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>नाम</th>
+          <th>मोबाइल</th>
+          <th>शहर</th>
+          <th>तारीख</th>
+          <th>समय</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
+  `;
+
+  // Pagination
+  const pgEl = document.getElementById('pagination');
+  pgEl.style.display = 'flex';
+  document.getElementById('pg-info').textContent =
+    `${start + 1}–${end} of ${total} leads`;
+
+  const pgBtns = document.getElementById('pg-btns');
+  pgBtns.innerHTML = '';
+
+  const mkBtn = (label, page, disabled = false, active = false) => {
+    const b = document.createElement('button');
+    b.className = 'pg-btn' + (active ? ' active' : '');
+    b.textContent = label;
+    b.disabled = disabled;
+    b.onclick = () => { DB.page = page; renderTable(); };
+    pgBtns.appendChild(b);
+  };
+
+  mkBtn('←', DB.page - 1, DB.page === 1);
+  const startP = Math.max(1, DB.page - 2);
+  const endP   = Math.min(pages, DB.page + 2);
+  for (let p = startP; p <= endP; p++) mkBtn(p, p, false, p === DB.page);
+  mkBtn('→', DB.page + 1, DB.page === pages);
+}
+
+function showLoading() {
+  document.getElementById('tbl-body').innerHTML =
+    `<div class="tbl-loading"><div class="spinner"></div><p>Data load हो रहा है...</p></div>`;
+  document.getElementById('pagination').style.display = 'none';
+}
+
+/* ══════════════════════════════════════
+   CSV EXPORT
+══════════════════════════════════════ */
+function exportCSV() {
+  if (!DB.allLeads.length) { toast('⚠️ कोई data नहीं — पहले load करें', 'err'); return; }
+
+  const headers = ['#', 'Name', 'Mobile', 'City', 'Date', 'Time'];
+  const rows = DB.allLeads.map((l, i) => [
+    i + 1,
+    `"${(l.name   || '').replace(/"/g, '""')}"`,
+    `"${(l.mobile || '').replace(/"/g, '""')}"`,
+    `"${(l.city   || '').replace(/"/g, '""')}"`,
+    `"${(l.date   || '').replace(/"/g, '""')}"`,
+    `"${(l.time   || '').replace(/"/g, '""')}"`,
+  ].join(','));
+
+  const csv  = '\uFEFF' + [headers.join(','), ...rows].join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = `leads_${DB.todayStr.replace(/\//g, '-')}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('✅ CSV export हो गई!', 'ok');
+}
+
+/* ══════════════════════════════════════
+   CONTROL PANEL — SAVE SETTINGS
+══════════════════════════════════════ */
+
+/* Generic key-value setting save */
+async function saveSetting(key, inputId, statusId) {
+  const val = (document.getElementById(inputId)?.value || '').trim();
+  if (!val) { showStatus(statusId, '⚠️ Value खाली है', false); return; }
+  await postSetting(key, val, statusId);
+}
+
+/* Save countdown (converts datetime-local to ISO) */
+async function saveCountdown() {
+  const val = document.getElementById('cp-countdown')?.value;
+  if (!val) { showStatus('countdown-status', '⚠️ Date/Time चुनें', false); return; }
+  const iso = new Date(val).toISOString();
+  await postSetting('countdownISO', iso, 'countdown-status');
+}
+
+/* POST setting to GAS */
+async function postSetting(key, value, statusId) {
+  if (!DB.gasUrl) {
+    showStatus(statusId, '⚠️ Apps Script URL नहीं है', false);
+    return;
+  }
+
+  showStatus(statusId, '⏳ Save हो रहा है...', null);
+
+  try {
+    await fetch(DB.gasUrl, {
+      method:  'POST',
+      mode:    'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ action: 'saveSetting', key, value }),
+    });
+    // no-cors → can't read response, assume success
+    showStatus(statusId, '✅ Save हो गया! Landing page पर दिखेगा।', true);
+    toast(`✅ ${key} updated!`, 'ok');
+  } catch(e) {
+    showStatus(statusId, '❌ Save नहीं हुआ: ' + e.message, false);
+  }
+}
+
+/* Poster preview */
+function previewPoster(url) {
+  const img = document.getElementById('poster-preview-img');
+  const ph  = document.getElementById('poster-preview-ph');
+  if (!img || !url) return;
+  img.onload  = () => { img.style.display = 'block'; if(ph) ph.style.display = 'none'; };
+  img.onerror = () => { img.style.display = 'none';  if(ph) ph.style.display = 'block'; };
+  img.src = url;
+}
+
+function showStatus(id, msg, ok) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = msg;
+  el.className   = 'save-status ' + (ok === true ? 'ok' : ok === false ? 'err' : '');
+  el.style.display = 'block';
+}
+
+/* ══════════════════════════════════════
+   HELPERS
+══════════════════════════════════════ */
+function setEl(id, val) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = val;
+}
+
+function esc(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function toast(msg, type = 'ok') {
+  const area = document.getElementById('toast-area');
+  if (!area) return;
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.textContent = msg;
+  area.appendChild(el);
+  setTimeout(() => {
+    el.style.transition = 'opacity 0.35s, transform 0.35s';
+    el.style.opacity = '0';
+    el.style.transform = 'translateX(16px)';
+    setTimeout(() => el.remove(), 350);
+  }, 3500);
+}
+</script>
+</body>
+</html>
